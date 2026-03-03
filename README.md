@@ -2,6 +2,9 @@
 
 Single-user deployment of OpenClaw on Azure using Bicep + Bash.
 
+## About
+Production-minded single-user OpenClaw deployment on Azure using VMSS, Bicep, and Bash with secure defaults: SSH keys only, NSG source restriction, Key Vault with managed identity, and Trusted Launch.
+
 ## Security defaults
 - SSH key authentication only (password auth disabled)
 - NSG access restricted to your current public IP by default
