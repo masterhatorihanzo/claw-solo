@@ -19,10 +19,6 @@ Production-minded single-user OpenClaw deployment on Azure using VMSS, Bicep, an
 4. SSH with `./scripts/ssh-to-instance.sh`.
 5. Edit `config/openclaw.template.json` and apply with `./scripts/update-config.sh`.
 
-## Notes
-- This repo is intentionally single-user and contains no team onboarding features.
-- Infrastructure defaults are defined in `infra/main.bicepparam`.
-
 ## Operational workflow
 - Deploy: `./scripts/deploy.sh` (restricts NSG to your detected public IP by default)
 - Connect: `./scripts/ssh-to-instance.sh`
