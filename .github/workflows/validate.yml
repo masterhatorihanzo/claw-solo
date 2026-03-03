@@ -1,0 +1,18 @@
+name: validate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bicep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure Login (OIDC optional for lint)
+        run: echo "Skipping login for static lint"
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+      - name: Lint Bicep
+        run: az bicep lint --file infra/main.bicep

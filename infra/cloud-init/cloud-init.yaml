@@ -1,0 +1,103 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+write_files:
+  - path: /opt/openclaw/setup.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      exec > /var/log/openclaw-setup.log 2>&1
+      echo "=== OpenClaw setup started at $(date) ==="
+
+      ADMIN_USER="{0}"
+      OPENCLAW_PORT="{1}"
+      KV_NAME="{2}"
+      HOME_DIR="/home/$ADMIN_USER"
+
+      echo "Installing Node.js 22..."
+      curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+      apt-get install -y nodejs
+
+      echo "Installing pnpm..."
+      npm install -g pnpm
+
+      if ! command -v az >/dev/null 2>&1; then
+        echo "Installing Azure CLI..."
+        curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+      fi
+
+      echo "Authenticating with managed identity..."
+      az login --identity
+
+      echo "Waiting for Key Vault access..."
+      MAX_RETRIES=30
+      RETRY_INTERVAL=10
+      for i in $(seq 1 $MAX_RETRIES); do
+        if az keyvault secret show --vault-name "$KV_NAME" --name "openclaw-secrets" > /dev/null 2>&1; then
+          echo "Key Vault access confirmed on attempt $i"
+          break
+        fi
+        if [ "$i" -eq "$MAX_RETRIES" ]; then
+          echo "ERROR: Could not access Key Vault after $MAX_RETRIES attempts"
+          exit 1
+        fi
+        echo "Attempt $i/$MAX_RETRIES - waiting $RETRY_INTERVAL seconds..."
+        sleep $RETRY_INTERVAL
+      done
+
+      echo "Pulling secrets from Key Vault..."
+      mkdir -p "$HOME_DIR/.openclaw/credentials"
+      az keyvault secret show --vault-name "$KV_NAME" --name "openclaw-secrets" --query "value" -o tsv > "$HOME_DIR/.openclaw/credentials/secrets.json"
+
+      echo "Installing OpenClaw..."
+      npm install -g openclaw@latest
+
+      echo "Writing OpenClaw config..."
+      cat > "$HOME_DIR/.openclaw/openclaw.json" << OCEOF
+      {
+        "gateway": {
+          "bind": "0.0.0.0:$OPENCLAW_PORT"
+        },
+        "model": {
+          "provider": "anthropic",
+          "name": "claude-sonnet-4-20250514"
+        },
+        "channels": []
+      }
+      OCEOF
+
+      chown -R "$ADMIN_USER:$ADMIN_USER" "$HOME_DIR/.openclaw"
+
+      echo "Creating systemd service..."
+      SYSTEMD_DIR="$HOME_DIR/.config/systemd/user"
+      mkdir -p "$SYSTEMD_DIR"
+      cat > "$SYSTEMD_DIR/openclaw-gateway.service" << SVCEOF
+      [Unit]
+      Description=OpenClaw Gateway
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/openclaw gateway run
+      Restart=always
+      RestartSec=5
+      Environment=NODE_ENV=production
+
+      [Install]
+      WantedBy=default.target
+      SVCEOF
+
+      chown -R "$ADMIN_USER:$ADMIN_USER" "$HOME_DIR/.config"
+
+      loginctl enable-linger "$ADMIN_USER"
+      sudo -u "$ADMIN_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $ADMIN_USER)" systemctl --user daemon-reload
+      sudo -u "$ADMIN_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $ADMIN_USER)" systemctl --user enable openclaw-gateway
+      sudo -u "$ADMIN_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $ADMIN_USER)" systemctl --user start openclaw-gateway
+
+      echo "=== OpenClaw setup completed at $(date) ==="
+
+runcmd:
+  - bash /opt/openclaw/setup.sh
