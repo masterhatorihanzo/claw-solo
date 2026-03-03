@@ -82,6 +82,40 @@ You can update Key Vault secrets after deployment.
 
 Deletes the resource group and all resources.
 
+## 9) Troubleshooting
+
+### A) `Failed to connect to bus: No such file or directory`
+
+Symptom:
+- Seen in cloud-init/setup when using `systemctl --user` from non-interactive bootstrap context.
+
+Cause:
+- User session bus is not guaranteed during cloud-init or Azure Run Command execution.
+
+Fix:
+- Use the system service installed by this repo (`/etc/systemd/system/openclaw-gateway.service`) instead of user service commands.
+- Verify with:
+   - `sudo systemctl status openclaw-gateway`
+
+### B) OpenClaw config validation errors
+
+Symptom examples:
+- `channels: Invalid input: expected object, received array`
+- `gateway.bind: Invalid input (allowed: "auto", "lan", "loopback", "custom", "tailnet")`
+- `non-loopback Control UI requires gateway.controlUi.allowedOrigins ...`
+
+Cause:
+- Older config shape in `openclaw.json` with newer OpenClaw runtime.
+
+Fix:
+- Ensure `/home/openclaw/.openclaw/openclaw.json` contains:
+   - `gateway.bind: "lan"`
+   - `gateway.port: 18789`
+   - `gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback: true`
+   - `channels: {}`
+- Restart service:
+   - `sudo systemctl restart openclaw-gateway`
+
 ## Current baseline
 
 - VM size: `Standard_B2s`
