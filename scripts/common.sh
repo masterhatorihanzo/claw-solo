@@ -4,6 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
+  export PATH="$PATH:/c/Program Files/Microsoft SDKs/Azure/CLI2/wbin"
+  export PATH="$PATH:/c/Users/$USERNAME/AppData/Local/Microsoft/WinGet/Links"
+  export PATH="$PATH:/c/Users/$USERNAME/bin"
+fi
+
 if [[ -f "$PROJECT_ROOT/.env" ]]; then
   set -a
   source "$PROJECT_ROOT/.env"

@@ -56,16 +56,22 @@ write_files:
 
       echo "Writing OpenClaw config..."
       cat > "$HOME_DIR/.openclaw/openclaw.json" << OCEOF
-      {
-        "gateway": {
+      {{
+        "gateway": {{
           "bind": "0.0.0.0:$OPENCLAW_PORT"
-        },
-        "model": {
-          "provider": "anthropic",
-          "name": "claude-sonnet-4-20250514"
-        },
+        }},
+        "agents": {{
+          "defaults": {{
+            "model": {{
+              "primary": "azure-openai-responses/gpt-5.2"
+            }},
+            "models": {{
+              "azure-openai-responses/gpt-5.2": {{}}
+            }}
+          }}
+        }},
         "channels": []
-      }
+      }}
       OCEOF
 
       chown -R "$ADMIN_USER:$ADMIN_USER" "$HOME_DIR/.openclaw"

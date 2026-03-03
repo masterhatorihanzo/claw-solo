@@ -1,6 +1,3 @@
-@description('Environment name')
-param environment string
-
 @description('Azure region')
 param location string = resourceGroup().location
 
@@ -11,8 +8,7 @@ param openclawSecrets string
 @description('Resource tags')
 param tags object = {}
 
-var namePrefix = 'openclaw-${environment}'
-var kvName = toLower(replace('${namePrefix}-${uniqueString(resourceGroup().id)}-kv', '-', ''))
+var kvName = toLower('oc${uniqueString(resourceGroup().id)}kv')
 
 resource kv 'Microsoft.KeyVault/vaults@2024-11-01' = {
   name: kvName

@@ -9,12 +9,12 @@ Production-minded single-user OpenClaw deployment on Azure using VMSS, Bicep, an
 - SSH key authentication only (password auth disabled)
 - NSG access restricted to your current public IP by default
 - OpenClaw secrets stored in Azure Key Vault
-- VMSS uses system-assigned managed identity to read Key Vault secrets
+- VMSS uses user-assigned managed identity to read Key Vault secrets
 - Trusted Launch enabled (Secure Boot + vTPM)
 
 ## Quick start
 1. Copy `.env.example` to `.env` and update values.
-2. Copy `secrets.example.json` to `secrets.json` and fill real values.
+2. Copy `secrets.example.json` to `secrets.json` and set Azure OpenAI values (`AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_BASE_URL`).
 3. Run `./scripts/deploy.sh`.
 4. SSH with `./scripts/ssh-to-instance.sh`.
 5. Edit `config/openclaw.template.json` and apply with `./scripts/update-config.sh`.
@@ -25,3 +25,6 @@ Production-minded single-user OpenClaw deployment on Azure using VMSS, Bicep, an
 - Rotate secrets: edit `secrets.json`, then redeploy with `./scripts/deploy.sh`
 - Update runtime config: edit `config/openclaw.template.json`, then run `./scripts/update-config.sh`
 - Tear down: `./scripts/teardown.sh`
+
+## Deployment guide
+- See `DEPLOYMENT.md` for full precheck, deploy, post-deploy validation, and secret update steps.

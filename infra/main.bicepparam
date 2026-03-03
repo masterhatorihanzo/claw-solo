@@ -6,3 +6,5 @@ param instanceCount = 1
 param vmSize = 'Standard_B2s'
 param adminUsername = 'openclaw'
 param openclawPort = 18789
+param sshPublicKey = 'ssh-rsa PLACEHOLDER_REPLACED_BY_DEPLOY_SCRIPT'
+param openclawSecrets = '{}'

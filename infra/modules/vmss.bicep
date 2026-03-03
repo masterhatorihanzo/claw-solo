@@ -35,12 +35,21 @@ var namePrefix = 'openclaw-${environment}'
 var cloudInitRaw = loadTextContent('../cloud-init/cloud-init.yaml')
 var cloudInitFormatted = format(cloudInitRaw, adminUsername, string(openclawPort), keyVaultName)
 
+resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${namePrefix}-uai'
+  location: location
+  tags: tags
+}
+
 resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-07-01' = {
   name: '${namePrefix}-vmss'
   location: location
   tags: tags
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${uai.id}': {}
+    }
   }
   sku: {
     name: vmSize
@@ -129,11 +138,11 @@ resource keyVaultRef 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
 }
 
 resource kvRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(vmss.id, keyVaultId, keyVaultSecretsUserRole)
+  name: guid(uai.id, keyVaultId, keyVaultSecretsUserRole)
   scope: keyVaultRef
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRole)
-    principalId: vmss.identity.principalId
+    principalId: uai.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }

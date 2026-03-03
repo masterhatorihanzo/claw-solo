@@ -52,7 +52,6 @@ module network 'modules/network.bicep' = {
 module keyvault 'modules/keyvault.bicep' = {
   name: 'keyvault'
   params: {
-    environment: environment
     location: location
     openclawSecrets: openclawSecrets
     tags: tags
