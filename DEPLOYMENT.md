@@ -52,7 +52,16 @@ The deployment creates:
    - `./scripts/ssh-to-instance.sh`
 3. Verify setup inside VM:
    - `tail -f /var/log/openclaw-setup.log`
-   - `systemctl --user status openclaw-gateway`
+   - `sudo systemctl status openclaw-gateway`
+   - `sudo ss -ltnp | grep 18789`
+
+Notes:
+- Bootstrap installs OpenClaw globally and runs it as a system service (`/etc/systemd/system/openclaw-gateway.service`) under user `openclaw`.
+- For current OpenClaw versions, non-loopback bind requires Control UI origin fallback in config. The bootstrap now writes a compatible config in `/home/openclaw/.openclaw/openclaw.json`:
+  - `gateway.bind: "lan"`
+  - `gateway.port: 18789`
+  - `gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback: true`
+  - `channels: {}`
 
 ## 6) Updating secrets later
 
