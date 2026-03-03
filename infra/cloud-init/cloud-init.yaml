@@ -20,6 +20,11 @@ write_files:
       curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
       apt-get install -y nodejs
 
+      if ! command -v npm >/dev/null 2>&1; then
+        echo "npm not found after nodejs install; installing npm package..."
+        apt-get install -y npm
+      fi
+
       echo "Installing pnpm..."
       npm install -g pnpm
 
@@ -58,7 +63,11 @@ write_files:
       cat > "$HOME_DIR/.openclaw/openclaw.json" << OCEOF
       {{
         "gateway": {{
-          "bind": "0.0.0.0:$OPENCLAW_PORT"
+          "bind": "lan",
+          "port": $OPENCLAW_PORT,
+          "controlUi": {{
+            "dangerouslyAllowHostHeaderOriginFallback": true
+          }}
         }},
         "agents": {{
           "defaults": {{
@@ -70,16 +79,14 @@ write_files:
             }}
           }}
         }},
-        "channels": []
+        "channels": {{}}
       }}
       OCEOF
 
       chown -R "$ADMIN_USER:$ADMIN_USER" "$HOME_DIR/.openclaw"
 
       echo "Creating systemd service..."
-      SYSTEMD_DIR="$HOME_DIR/.config/systemd/user"
-      mkdir -p "$SYSTEMD_DIR"
-      cat > "$SYSTEMD_DIR/openclaw-gateway.service" << SVCEOF
+      cat > "/etc/systemd/system/openclaw-gateway.service" << SVCEOF
       [Unit]
       Description=OpenClaw Gateway
       After=network-online.target
@@ -87,21 +94,21 @@ write_files:
 
       [Service]
       Type=simple
+      User=$ADMIN_USER
+      Group=$ADMIN_USER
+      WorkingDirectory=$HOME_DIR
       ExecStart=/usr/bin/openclaw gateway run
       Restart=always
       RestartSec=5
       Environment=NODE_ENV=production
 
       [Install]
-      WantedBy=default.target
+      WantedBy=multi-user.target
       SVCEOF
 
-      chown -R "$ADMIN_USER:$ADMIN_USER" "$HOME_DIR/.config"
-
-      loginctl enable-linger "$ADMIN_USER"
-      sudo -u "$ADMIN_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $ADMIN_USER)" systemctl --user daemon-reload
-      sudo -u "$ADMIN_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $ADMIN_USER)" systemctl --user enable openclaw-gateway
-      sudo -u "$ADMIN_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $ADMIN_USER)" systemctl --user start openclaw-gateway
+      systemctl daemon-reload
+      systemctl enable openclaw-gateway
+      systemctl start openclaw-gateway
 
       echo "=== OpenClaw setup completed at $(date) ==="
 
