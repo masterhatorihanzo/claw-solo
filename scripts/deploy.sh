@@ -34,9 +34,13 @@ else
     SSH_CIDR="$MY_IP/32"
     GATEWAY_CIDR="$MY_IP/32"
   else
-    echo "WARNING: Could not detect public IP. Falling back to '*'"
-    SSH_CIDR="*"
-    GATEWAY_CIDR="*"
+    echo "ERROR: Could not detect public IP automatically."
+    echo "Refusing to deploy with wildcard ingress by default."
+    echo "Use one of:"
+    echo "  - rerun when IP detection works"
+    echo "  - set access explicitly after deploy with ./scripts/set-access.sh"
+    echo "  - run with --open (not recommended)"
+    exit 1
   fi
 fi
 

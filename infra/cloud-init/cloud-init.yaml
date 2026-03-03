@@ -55,6 +55,8 @@ write_files:
       echo "Pulling secrets from Key Vault..."
       mkdir -p "$HOME_DIR/.openclaw/credentials"
       az keyvault secret show --vault-name "$KV_NAME" --name "openclaw-secrets" --query "value" -o tsv > "$HOME_DIR/.openclaw/credentials/secrets.json"
+      chmod 700 "$HOME_DIR/.openclaw/credentials"
+      chmod 600 "$HOME_DIR/.openclaw/credentials/secrets.json"
 
       echo "Installing OpenClaw..."
       npm install -g openclaw@latest

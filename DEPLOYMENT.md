@@ -45,6 +45,18 @@ The deployment creates:
 - User-assigned managed identity
 - VMSS (1 instance by default, `Standard_B2s`)
 
+Security behavior:
+- If your public IP cannot be auto-detected, deploy now fails closed (it does not fall back to `*`).
+- To intentionally open access from anywhere, run `./scripts/deploy.sh --open`.
+
+### Access on/off after deploy
+
+Use:
+- `./scripts/set-access.sh --ssh on --ssh-cidr auto`
+- `./scripts/set-access.sh --ssh off`
+- `./scripts/set-access.sh --gateway on --gateway-cidr auto`
+- `./scripts/set-access.sh --gateway off`
+
 ## 5) Post-deploy checks
 
 1. Wait 3-5 minutes for cloud-init bootstrap.

@@ -21,10 +21,15 @@ Production-minded single-user OpenClaw deployment on Azure using VMSS, Bicep, an
 
 ## Operational workflow
 - Deploy: `./scripts/deploy.sh` (restricts NSG to your detected public IP by default)
+- Toggle access on/off any time: `./scripts/set-access.sh --ssh on|off --gateway on|off`
 - Connect: `./scripts/ssh-to-instance.sh`
 - Rotate secrets: edit `secrets.json`, then redeploy with `./scripts/deploy.sh`
 - Update runtime config: edit `config/openclaw.template.json`, then run `./scripts/update-config.sh`
 - Tear down: `./scripts/teardown.sh`
+
+## Access control notes
+- `./scripts/deploy.sh` now fails closed if your public IP cannot be detected (instead of defaulting to `*`).
+- Use `./scripts/set-access.sh` to explicitly enable/disable SSH and gateway exposure per your discretion.
 
 ## Deployment guide
 - See `DEPLOYMENT.md` for full precheck, deploy, post-deploy validation, and secret update steps.
